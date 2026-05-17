@@ -1,0 +1,808 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Mijn Boekenplank</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=DM+Mono:wght@400;500&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+  <style>
+    /* ── Reset & basisvariabelen ───────────────────────────────────── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --ink:       #1a1612;
+      --paper:     #f5f0e8;
+      --cream:     #ede8dc;
+      --warm:      #d4c9b0;
+      --accent:    #8b3a2a;
+      --accent2:   #c5622e;
+      --muted:     #7a7065;
+      --spine1:    #8b3a2a;
+      --spine2:    #2a4a5e;
+      --spine3:    #3d5a35;
+      --spine4:    #6b4c8a;
+      --spine5:    #7a5c2e;
+      --spine6:    #2e5a5a;
+      --radius:    4px;
+      --shadow:    0 2px 12px rgba(26,22,18,.12);
+    }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      font-family: 'DM Sans', sans-serif;
+      background: var(--paper);
+      color: var(--ink);
+      min-height: 100vh;
+      font-size: 15px;
+      line-height: 1.6;
+    }
+
+    /* ── Header ───────────────────────────────────────────────────── */
+    header {
+      background: var(--ink);
+      color: var(--paper);
+      padding: 3rem 2rem 2.5rem;
+      position: relative;
+      overflow: hidden;
+    }
+
+    header::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: repeating-linear-gradient(
+        90deg,
+        transparent,
+        transparent 40px,
+        rgba(255,255,255,.02) 40px,
+        rgba(255,255,255,.02) 41px
+      );
+      pointer-events: none;
+    }
+
+    .header-inner {
+      max-width: 1100px;
+      margin: 0 auto;
+      position: relative;
+    }
+
+    .header-label {
+      font-family: 'DM Mono', monospace;
+      font-size: .7rem;
+      letter-spacing: .2em;
+      text-transform: uppercase;
+      color: var(--accent2);
+      margin-bottom: .6rem;
+    }
+
+    header h1 {
+      font-family: 'Playfair Display', serif;
+      font-size: clamp(2.2rem, 5vw, 3.8rem);
+      font-weight: 700;
+      letter-spacing: -.02em;
+      line-height: 1.1;
+    }
+
+    header h1 em {
+      font-style: italic;
+      color: var(--accent2);
+    }
+
+    .header-sub {
+      margin-top: .8rem;
+      font-size: .9rem;
+      color: var(--warm);
+      font-weight: 300;
+    }
+
+    .header-stats {
+      display: flex;
+      gap: 2rem;
+      margin-top: 1.6rem;
+      flex-wrap: wrap;
+    }
+
+    .stat {
+      display: flex;
+      flex-direction: column;
+      gap: .15rem;
+    }
+
+    .stat-num {
+      font-family: 'Playfair Display', serif;
+      font-size: 1.8rem;
+      font-weight: 700;
+      color: var(--accent2);
+      line-height: 1;
+    }
+
+    .stat-label {
+      font-family: 'DM Mono', monospace;
+      font-size: .65rem;
+      letter-spacing: .12em;
+      text-transform: uppercase;
+      color: var(--warm);
+    }
+
+    /* ── Toolbar / filters ────────────────────────────────────────── */
+    .toolbar {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      background: var(--cream);
+      border-bottom: 1px solid var(--warm);
+      padding: .9rem 2rem;
+      box-shadow: 0 2px 8px rgba(26,22,18,.06);
+    }
+
+    .toolbar-inner {
+      max-width: 1100px;
+      margin: 0 auto;
+      display: flex;
+      gap: .75rem;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+
+    .zoekbalk-wrap {
+      position: relative;
+      flex: 1;
+      min-width: 200px;
+    }
+
+    .zoekbalk-wrap svg {
+      position: absolute;
+      left: .8rem;
+      top: 50%;
+      transform: translateY(-50%);
+      color: var(--muted);
+      pointer-events: none;
+    }
+
+    input[type="search"] {
+      width: 100%;
+      padding: .55rem .9rem .55rem 2.4rem;
+      border: 1.5px solid var(--warm);
+      border-radius: var(--radius);
+      background: var(--paper);
+      font-family: 'DM Sans', sans-serif;
+      font-size: .88rem;
+      color: var(--ink);
+      outline: none;
+      transition: border-color .2s;
+    }
+
+    input[type="search"]:focus { border-color: var(--accent); }
+
+    select {
+      padding: .55rem .9rem;
+      border: 1.5px solid var(--warm);
+      border-radius: var(--radius);
+      background: var(--paper);
+      font-family: 'DM Sans', sans-serif;
+      font-size: .85rem;
+      color: var(--ink);
+      cursor: pointer;
+      outline: none;
+      transition: border-color .2s;
+      appearance: none;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%237a7065' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right .75rem center;
+      padding-right: 2rem;
+    }
+
+    select:focus { border-color: var(--accent); }
+
+    .weergave-knoppen {
+      display: flex;
+      gap: .3rem;
+    }
+
+    .weergave-knoppen button {
+      padding: .5rem .65rem;
+      border: 1.5px solid var(--warm);
+      border-radius: var(--radius);
+      background: var(--paper);
+      cursor: pointer;
+      color: var(--muted);
+      transition: all .2s;
+      line-height: 1;
+    }
+
+    .weergave-knoppen button.actief,
+    .weergave-knoppen button:hover {
+      background: var(--ink);
+      border-color: var(--ink);
+      color: var(--paper);
+    }
+
+    .resultaat-teller {
+      font-family: 'DM Mono', monospace;
+      font-size: .72rem;
+      color: var(--muted);
+      white-space: nowrap;
+      letter-spacing: .05em;
+    }
+
+    /* ── Hoofd container ──────────────────────────────────────────── */
+    main {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 2rem;
+    }
+
+    /* ── Laadindicator ────────────────────────────────────────────── */
+    #laad-status {
+      text-align: center;
+      padding: 4rem;
+      color: var(--muted);
+      font-style: italic;
+    }
+
+    /* ── Grid-weergave ────────────────────────────────────────────── */
+    #boeken-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+      gap: 1.5rem;
+    }
+
+    .boek-kaart {
+      cursor: default;
+      transition: transform .2s;
+      animation: fadeIn .3s ease both;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(8px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    .boek-kaart:hover { transform: translateY(-4px); }
+
+    .boek-rug {
+      width: 100%;
+      aspect-ratio: 2/3;
+      border-radius: 3px 6px 6px 3px;
+      display: flex;
+      align-items: flex-end;
+      padding: .8rem .6rem;
+      position: relative;
+      overflow: hidden;
+      box-shadow: -3px 3px 8px rgba(0,0,0,.25), 3px 3px 8px rgba(0,0,0,.1);
+      transition: box-shadow .2s;
+    }
+
+    .boek-kaart:hover .boek-rug {
+      box-shadow: -4px 6px 16px rgba(0,0,0,.3), 4px 4px 12px rgba(0,0,0,.12);
+    }
+
+    .boek-rug::before {
+      content: '';
+      position: absolute;
+      left: 0; top: 0; bottom: 0;
+      width: 8px;
+      background: rgba(0,0,0,.2);
+    }
+
+    .boek-rug::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(135deg, rgba(255,255,255,.12) 0%, transparent 60%);
+      pointer-events: none;
+    }
+
+    .boek-rug-tekst {
+      position: relative;
+      z-index: 1;
+      color: rgba(255,255,255,.92);
+    }
+
+    .rug-titel {
+      font-family: 'Playfair Display', serif;
+      font-size: .72rem;
+      font-weight: 700;
+      line-height: 1.3;
+      display: -webkit-box;
+      -webkit-line-clamp: 4;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+
+    .rug-auteur {
+      font-size: .62rem;
+      opacity: .75;
+      margin-top: .25rem;
+      font-style: italic;
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+
+    .boek-info {
+      margin-top: .5rem;
+    }
+
+    .boek-titel-klein {
+      font-size: .82rem;
+      font-weight: 500;
+      line-height: 1.3;
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+
+    .boek-auteur-klein {
+      font-size: .75rem;
+      color: var(--muted);
+      margin-top: .15rem;
+      font-style: italic;
+    }
+
+    .boek-meta-tags {
+      display: flex;
+      gap: .3rem;
+      margin-top: .4rem;
+      flex-wrap: wrap;
+    }
+
+    .tag {
+      font-family: 'DM Mono', monospace;
+      font-size: .6rem;
+      padding: .15rem .4rem;
+      border-radius: 2px;
+      background: var(--cream);
+      color: var(--muted);
+      letter-spacing: .03em;
+    }
+
+    /* ── Lijstweergave ────────────────────────────────────────────── */
+    #boeken-lijst {
+      display: flex;
+      flex-direction: column;
+      gap: 0;
+      border: 1px solid var(--warm);
+      border-radius: var(--radius);
+      overflow: hidden;
+    }
+
+    .lijst-rij {
+      display: grid;
+      grid-template-columns: 1fr 200px 120px 80px 70px;
+      gap: 1rem;
+      align-items: center;
+      padding: .75rem 1rem;
+      border-bottom: 1px solid var(--cream);
+      background: var(--paper);
+      transition: background .15s;
+      animation: fadeIn .2s ease both;
+    }
+
+    .lijst-rij:last-child { border-bottom: none; }
+    .lijst-rij:hover { background: var(--cream); }
+
+    .lijst-rij.header-rij {
+      background: var(--ink);
+      color: var(--paper);
+      font-family: 'DM Mono', monospace;
+      font-size: .68rem;
+      letter-spacing: .1em;
+      text-transform: uppercase;
+      cursor: default;
+      position: sticky;
+      top: 56px;
+    }
+
+    .lijst-rij.header-rij:hover { background: var(--ink); }
+
+    .rij-titel {
+      font-weight: 500;
+      font-size: .88rem;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .rij-auteur {
+      font-size: .82rem;
+      color: var(--muted);
+      font-style: italic;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .rij-genre {
+      font-size: .78rem;
+      color: var(--muted);
+    }
+
+    .rij-jaar {
+      font-family: 'DM Mono', monospace;
+      font-size: .8rem;
+      color: var(--muted);
+    }
+
+    .rij-formaat {
+      font-family: 'DM Mono', monospace;
+      font-size: .7rem;
+      padding: .2rem .4rem;
+      border-radius: 2px;
+      text-align: center;
+    }
+
+    .formaat-epub { background: #e8f0e0; color: #3d5a35; }
+    .formaat-mobi { background: #e0eaf5; color: #2a4a5e; }
+    .formaat-azw  { background: #f5e8e0; color: #7a3a2a; }
+
+    /* ── Kleurenpaletten voor boegrugen ───────────────────────────── */
+    .kleur-0  { background: linear-gradient(160deg, #8b3a2a 0%, #6b2a1a 100%); }
+    .kleur-1  { background: linear-gradient(160deg, #2a4a5e 0%, #1a3040 100%); }
+    .kleur-2  { background: linear-gradient(160deg, #3d5a35 0%, #2a4025 100%); }
+    .kleur-3  { background: linear-gradient(160deg, #6b4c8a 0%, #4a3060 100%); }
+    .kleur-4  { background: linear-gradient(160deg, #7a5c2e 0%, #5a4020 100%); }
+    .kleur-5  { background: linear-gradient(160deg, #2e5a5a 0%, #1e4040 100%); }
+    .kleur-6  { background: linear-gradient(160deg, #5a3a5a 0%, #3a2040 100%); }
+    .kleur-7  { background: linear-gradient(160deg, #4a5a3a 0%, #303d28 100%); }
+    .kleur-8  { background: linear-gradient(160deg, #5a4a3a 0%, #3a3025 100%); }
+    .kleur-9  { background: linear-gradient(160deg, #3a4a5a 0%, #253040 100%); }
+
+    /* ── Geen resultaten ──────────────────────────────────────────── */
+    .geen-resultaten {
+      grid-column: 1 / -1;
+      text-align: center;
+      padding: 4rem 2rem;
+      color: var(--muted);
+    }
+
+    .geen-resultaten p:first-child {
+      font-family: 'Playfair Display', serif;
+      font-size: 1.4rem;
+      font-style: italic;
+      margin-bottom: .5rem;
+    }
+
+    /* ── Footer ───────────────────────────────────────────────────── */
+    footer {
+      text-align: center;
+      padding: 2rem;
+      color: var(--muted);
+      font-size: .75rem;
+      font-family: 'DM Mono', monospace;
+      border-top: 1px solid var(--warm);
+      margin-top: 3rem;
+      letter-spacing: .05em;
+    }
+
+    /* ── Responsief ───────────────────────────────────────────────── */
+    @media (max-width: 700px) {
+      .toolbar-inner { gap: .5rem; }
+      #boeken-grid { grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 1rem; }
+      .lijst-rij { grid-template-columns: 1fr 100px 60px; }
+      .lijst-rij .rij-genre,
+      .lijst-rij .rij-formaat { display: none; }
+      main { padding: 1rem; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- ── HEADER ──────────────────────────────────────────────────────── -->
+<header>
+  <div class="header-inner">
+    <div class="header-label">Persoonlijke collectie</div>
+    <h1>Mijn <em>Boekenplank</em></h1>
+    <p class="header-sub">Een overzicht van mijn digitale bibliotheek</p>
+    <div class="header-stats">
+      <div class="stat">
+        <span class="stat-num" id="stat-totaal">—</span>
+        <span class="stat-label">Boeken</span>
+      </div>
+      <div class="stat">
+        <span class="stat-num" id="stat-auteurs">—</span>
+        <span class="stat-label">Auteurs</span>
+      </div>
+      <div class="stat">
+        <span class="stat-num" id="stat-genres">—</span>
+        <span class="stat-label">Genres</span>
+      </div>
+    </div>
+  </div>
+</header>
+
+<!-- ── TOOLBAR ─────────────────────────────────────────────────────── -->
+<div class="toolbar">
+  <div class="toolbar-inner">
+    <!-- Zoekbalk -->
+    <div class="zoekbalk-wrap">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+      </svg>
+      <input type="search" id="zoek" placeholder="Zoek op titel, auteur…" autocomplete="off">
+    </div>
+
+    <!-- Filter: genre -->
+    <select id="filter-genre" aria-label="Filter op genre">
+      <option value="">Alle genres</option>
+    </select>
+
+    <!-- Filter: jaar -->
+    <select id="filter-jaar" aria-label="Filter op decennium">
+      <option value="">Alle jaren</option>
+    </select>
+
+    <!-- Filter: taal -->
+    <select id="filter-taal" aria-label="Filter op taal">
+      <option value="">Alle talen</option>
+    </select>
+
+    <!-- Sortering -->
+    <select id="sorteer" aria-label="Sorteren op">
+      <option value="auteur">Op auteur</option>
+      <option value="titel">Op titel</option>
+      <option value="jaar-asc">Jaar (oud → nieuw)</option>
+      <option value="jaar-desc">Jaar (nieuw → oud)</option>
+    </select>
+
+    <!-- Resultaatteller -->
+    <span class="resultaat-teller" id="teller">— boeken</span>
+
+    <!-- Weergave -->
+    <div class="weergave-knoppen">
+      <button id="btn-grid" class="actief" title="Rasterweergave" aria-label="Rasterweergave">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
+          <rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/>
+          <rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/>
+        </svg>
+      </button>
+      <button id="btn-lijst" title="Lijstweergave" aria-label="Lijstweergave">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
+          <line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/>
+        </svg>
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- ── MAIN CONTENT ─────────────────────────────────────────────────── -->
+<main>
+  <div id="laad-status">Collectie laden…</div>
+  <div id="boeken-grid" style="display:none"></div>
+  <div id="boeken-lijst" style="display:none"></div>
+</main>
+
+<footer id="footer-info">Collectie gegenereerd op —</footer>
+
+<!-- ── JAVASCRIPT ──────────────────────────────────────────────────── -->
+<script>
+  // ── Kleur op basis van boeknaam ────────────────────────────────────
+  function kleurIndex(tekst) {
+    let hash = 0;
+    for (let i = 0; i < tekst.length; i++) hash = tekst.charCodeAt(i) + ((hash << 5) - hash);
+    return Math.abs(hash) % 10;
+  }
+
+  // ── Bouw boekrug-kaart ─────────────────────────────────────────────
+  function maakGridKaart(b) {
+    const kleur = kleurIndex(b.titel + (b.auteur || ''));
+    const jaar  = b.jaar ? String(b.jaar) : '';
+    const formaat = (b.formaat || '').toLowerCase();
+    const div = document.createElement('div');
+    div.className = 'boek-kaart';
+    div.innerHTML = `
+      <div class="boek-rug kleur-${kleur}">
+        <div class="boek-rug-tekst">
+          <div class="rug-titel">${esc(b.titel)}</div>
+          <div class="rug-auteur">${esc(b.auteur || '')}</div>
+        </div>
+      </div>
+      <div class="boek-info">
+        <div class="boek-titel-klein">${esc(b.titel)}</div>
+        <div class="boek-auteur-klein">${esc(b.auteur || 'Onbekend')}</div>
+        <div class="boek-meta-tags">
+          ${b.genre   ? `<span class="tag">${esc(b.genre)}</span>` : ''}
+          ${jaar      ? `<span class="tag">${jaar}</span>` : ''}
+          ${b.formaat ? `<span class="tag">${esc(b.formaat)}</span>` : ''}
+        </div>
+      </div>`;
+    return div;
+  }
+
+  // ── Bouw lijstrij ──────────────────────────────────────────────────
+  function maakLijstRij(b) {
+    const formaat = (b.formaat || '').toUpperCase();
+    const div = document.createElement('div');
+    div.className = 'lijst-rij';
+    div.innerHTML = `
+      <div class="rij-titel">${esc(b.titel)}</div>
+      <div class="rij-auteur">${esc(b.auteur || 'Onbekend')}</div>
+      <div class="rij-genre">${esc(b.genre || '')}</div>
+      <div class="rij-jaar">${b.jaar || ''}</div>
+      <div class="rij-formaat formaat-${formaat.toLowerCase()}">${formaat}</div>`;
+    return div;
+  }
+
+  function esc(s) {
+    return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  }
+
+  // ── Toestand ───────────────────────────────────────────────────────
+  let alleBoeken = [];
+  let weergave   = 'grid'; // 'grid' of 'lijst'
+
+  // ── Laad books.json ────────────────────────────────────────────────
+  async function laadBoeken() {
+    try {
+      const r = await fetch('books.json');
+      if (!r.ok) throw new Error(`HTTP ${r.status}`);
+      const data = await r.json();
+      alleBoeken = data.boeken || [];
+
+      // Footer datum
+      if (data.gegenereerd) {
+        const d = new Date(data.gegenereerd);
+        document.getElementById('footer-info').textContent =
+          `Collectie gegenereerd op ${d.toLocaleDateString('nl-NL', {day:'numeric',month:'long',year:'numeric'})}`;
+      }
+
+      vulFilters();
+      toonStatistieken();
+      render();
+      document.getElementById('laad-status').style.display = 'none';
+    } catch (e) {
+      document.getElementById('laad-status').innerHTML =
+        `<p style="color:var(--accent)">⚠ Kon books.json niet laden.</p>
+         <p style="margin-top:.5rem;font-size:.85rem">Zorg dat books.json in dezelfde map staat als index.html.</p>`;
+    }
+  }
+
+  // ── Vul filter-dropdowns ───────────────────────────────────────────
+  function vulFilters() {
+    const genres  = [...new Set(alleBoeken.map(b => b.genre).filter(Boolean))].sort();
+    const talen   = [...new Set(alleBoeken.map(b => b.taal).filter(Boolean))].sort();
+    const jaren   = [...new Set(alleBoeken.map(b => b.jaar).filter(Boolean))].sort((a,b) => a-b);
+
+    vulSelect('filter-genre', genres);
+    vulSelect('filter-taal',  talen);
+
+    // Decennia
+    const decennia = [...new Set(jaren.map(j => Math.floor(j / 10) * 10))];
+    const sel = document.getElementById('filter-jaar');
+    decennia.forEach(d => {
+      const opt = document.createElement('option');
+      opt.value = d;
+      opt.textContent = `${d}–${d+9}`;
+      sel.appendChild(opt);
+    });
+  }
+
+  function vulSelect(id, waarden) {
+    const sel = document.getElementById(id);
+    waarden.forEach(w => {
+      const opt = document.createElement('option');
+      opt.value = w;
+      opt.textContent = w;
+      sel.appendChild(opt);
+    });
+  }
+
+  // ── Statistieken ───────────────────────────────────────────────────
+  function toonStatistieken() {
+    document.getElementById('stat-totaal').textContent  = alleBoeken.length;
+    document.getElementById('stat-auteurs').textContent = new Set(alleBoeken.map(b => b.auteur).filter(Boolean)).size;
+    document.getElementById('stat-genres').textContent  = new Set(alleBoeken.map(b => b.genre).filter(Boolean)).size;
+  }
+
+  // ── Filter & sorteer ───────────────────────────────────────────────
+  function gefilterd() {
+    const zoek   = document.getElementById('zoek').value.toLowerCase().trim();
+    const genre  = document.getElementById('filter-genre').value;
+    const jaar   = document.getElementById('filter-jaar').value;
+    const taal   = document.getElementById('filter-taal').value;
+    const sorteer = document.getElementById('sorteer').value;
+
+    let lijst = alleBoeken.filter(b => {
+      if (genre && b.genre !== genre) return false;
+      if (taal  && b.taal  !== taal)  return false;
+      if (jaar) {
+        const d = parseInt(jaar);
+        if (!b.jaar || b.jaar < d || b.jaar > d + 9) return false;
+      }
+      if (zoek) {
+        const haystack = `${b.titel} ${b.auteur} ${b.genre}`.toLowerCase();
+        if (!haystack.includes(zoek)) return false;
+      }
+      return true;
+    });
+
+    lijst.sort((a, b) => {
+      switch (sorteer) {
+        case 'titel':     return (a.titel   || '').localeCompare(b.titel   || '', 'nl');
+        case 'jaar-asc':  return (a.jaar || 9999) - (b.jaar || 9999);
+        case 'jaar-desc': return (b.jaar || 0)    - (a.jaar || 0);
+        default:          return (a.auteur  || '').localeCompare(b.auteur  || '', 'nl');
+      }
+    });
+
+    return lijst;
+  }
+
+  // ── Render ─────────────────────────────────────────────────────────
+  function render() {
+    const boeken = gefilterd();
+    document.getElementById('teller').textContent = `${boeken.length} boek${boeken.length !== 1 ? 'en' : ''}`;
+
+    if (weergave === 'grid') {
+      const grid = document.getElementById('boeken-grid');
+      grid.style.display = '';
+      document.getElementById('boeken-lijst').style.display = 'none';
+      grid.innerHTML = '';
+      if (!boeken.length) {
+        grid.innerHTML = '<div class="geen-resultaten"><p>Geen boeken gevonden</p><p>Probeer een andere zoekterm of filter.</p></div>';
+      } else {
+        boeken.forEach((b, i) => {
+          const el = maakGridKaart(b);
+          el.style.animationDelay = `${Math.min(i, 30) * 20}ms`;
+          grid.appendChild(el);
+        });
+      }
+    } else {
+      const lijst = document.getElementById('boeken-lijst');
+      lijst.style.display = '';
+      document.getElementById('boeken-grid').style.display = 'none';
+      lijst.innerHTML = '';
+      // Header-rij
+      const header = document.createElement('div');
+      header.className = 'lijst-rij header-rij';
+      header.innerHTML = `<div>Titel</div><div>Auteur</div><div>Genre</div><div>Jaar</div><div>Formaat</div>`;
+      lijst.appendChild(header);
+
+      if (!boeken.length) {
+        const leeg = document.createElement('div');
+        leeg.className = 'geen-resultaten';
+        leeg.innerHTML = '<p>Geen boeken gevonden</p><p>Probeer een andere zoekterm of filter.</p>';
+        lijst.appendChild(leeg);
+      } else {
+        boeken.forEach((b, i) => {
+          const el = maakLijstRij(b);
+          el.style.animationDelay = `${Math.min(i, 30) * 15}ms`;
+          lijst.appendChild(el);
+        });
+      }
+    }
+  }
+
+  // ── Events ─────────────────────────────────────────────────────────
+  let zoekTimer;
+  document.getElementById('zoek').addEventListener('input', () => {
+    clearTimeout(zoekTimer);
+    zoekTimer = setTimeout(render, 200);
+  });
+
+  ['filter-genre','filter-jaar','filter-taal','sorteer'].forEach(id =>
+    document.getElementById(id).addEventListener('change', render));
+
+  document.getElementById('btn-grid').addEventListener('click', () => {
+    weergave = 'grid';
+    document.getElementById('btn-grid').classList.add('actief');
+    document.getElementById('btn-lijst').classList.remove('actief');
+    render();
+  });
+
+  document.getElementById('btn-lijst').addEventListener('click', () => {
+    weergave = 'lijst';
+    document.getElementById('btn-lijst').classList.add('actief');
+    document.getElementById('btn-grid').classList.remove('actief');
+    render();
+  });
+
+  // ── Start ──────────────────────────────────────────────────────────
+  laadBoeken();
+</script>
+</body>
+</html>
